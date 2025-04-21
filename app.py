@@ -1,3 +1,14 @@
+#Data and Model Preprocessing Pharm-Tech doesn’t rely on a dataset in the traditional sense, but it still requires careful input design and prompt engineering to make sure the AI generates relevant and accurate Python code. Since we’re using Together.ai for code generation, most of the preprocessing happens in how the user’s plain-English prompt is formatted before it's sent to the model. 
+#To ensure better results, we guide users to phrase their requests clearly and specifically—for example, instead of saying “do PK stuff,” a more effective prompt would be “calculate drug half-life from volume of distribution and clearance.” Internally, the app strips unnecessary whitespace, handles any empty input errors, and passes the cleaned prompt directly to the Together.ai API using a serverless model. 
+#Here are a few basic preprocessing steps we included: 
+#Stripped leading/trailing whitespace from user input 
+#Ensured prompt length doesn't exceed API limits 
+#Checked for empty or invalid inputs and returned a warning 
+#Removed newline breaks or HTML artifacts that can appear in form text 
+#Used consistent temperature and token limits to control output length and creativity 
+#This helps make the AI’s output more predictable and relevant to healthcare students who may be unfamiliar with tweaking model parameters. 
+#All preprocessing logic is included in the app.py file in the GitHub repo. 
+
 import os
 import streamlit as st
 from dotenv import load_dotenv
