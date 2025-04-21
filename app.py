@@ -1,43 +1,44 @@
 import os
 import streamlit as st
+from dotenv import load_dotenv
 import together
 
-# Set API key (set this in Streamlit Secrets or env vars)
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+# Load .env variables (for local dev)
+load_dotenv()
 
-if not TOGETHER_API_KEY:
-    st.error("API key not found. Please set TOGETHER_API_KEY as an environment variable or in Streamlit Secrets.")
+# Set API key from .env or environment
+api_key = os.getenv("TOGETHER_API_KEY")
+
+# Check if the key exists
+if not api_key:
+    st.error("API key not found. Please set TOGETHER_API_KEY in .env.")
     st.stop()
 
-# Initialize Together client
-client = together.Together(api_key=TOGETHER_API_KEY)
+# Initialize Together.ai client
+client = together.Together(api_key=api_key)
 
-# Streamlit UI setup
-st.set_page_config(page_title="Pharma Code Helper", layout="centered")
-st.title("💊 Pharma Code Helper")
-st.markdown("Describe your task (e.g., *'calculate creatinine clearance using Cockcroft-Gault equation'*)")
+# Streamlit UI
+st.title("💊 Healthcare Code Generator")
+st.write("Describe a healthcare task in plain English and get Python code back!")
 
-# User prompt
-prompt = st.text_area("What do you want Python code for?", height=150)
+prompt = st.text_area("Enter your task (e.g. 'Calculate creatinine clearance...')", height=150)
 
-# Generate code button
-if st.button("Generate Code") and prompt.strip():
-    with st.spinner("Generating code..."):
-        try:
-            response = client.completions.create(
-                prompt=prompt,
-                model="mistralai/Mistral-7B-Instruct-v0.1",  # ✅ Serverless model
-                max_tokens=256,
-                temperature=0.7,
-                top_p=0.95,
-                repetition_penalty=1.1,
-                stop=["</s>"]
-            )
-
-            # Access the generated text from the response object correctly
-            generated_code = response.output.strip()
-            st.success("Here’s your code:")
-            st.code(generated_code, language="python")
-
-        except Exception as e:
-            st.error(f"Something went wrong: {e}")
+if st.button("Generate Code"):
+    if not prompt.strip():
+        st.warning("Please enter a prompt.")
+    else:
+        with st.spinner("Generating code..."):
+            try:
+                response = client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": "You're a helpful Python code generator for healthcare and pharmacy tasks."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+                    max_tokens=256,
+                    temperature=0.7
+                )
+                generated_code = response.choices[0].message.content
+                st.code(generated_code, language="python")
+            except Exception as e:
+                st.error(f"Something went wrong: {e}")
